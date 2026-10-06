@@ -1,0 +1,63 @@
+{
+ "service": "product-recall-traceability",
+ "run": "demo-1",
+ "tokens": {
+  "head": "arden-head_of_quality-demo",
+  "engineer": "arden-quality_engineer-demo",
+  "viewer": "arden-viewer-demo"
+ },
+ "steps": [
+  {
+   "title": "Sixty days of drive units",
+   "say": "An invented e-bike drive-unit plant: three SMT lines put four DC-link capacitors from one supplier on every controller board; each board goes into a drive unit; units ship to eight customers. Sixty days of records arrive from the MES with the flaws real records have: lot codes misread or unread at receiving, smudged date codes, reel scans made minutes after the splice or forgotten, rework tickets without the replacement board's serial. Then a batch of new events, each checked on its own.",
+   "calls": [
+    {"key": "gen", "as": "head", "method": "POST", "path": "/v1/events/assembly", "body": {"generate": {"seed": 11}}},
+    {"key": "events", "as": "engineer", "method": "POST", "path": "/v1/events/assembly", "body": {"events": [
+     {"event_id": "MES-UB-90001", "kind": "unit_build", "at": "2026-08-31T07:20:00Z", "serial": "ADU-900001", "board_serial": "CB2-59211"},
+     {"event_id": "MES-UB-90002", "kind": "unit_build", "at": "2026-08-31T07:25:00Z", "serial": "ADU-900002", "board_serial": "CB1-59211"},
+     {"event_id": "MES-UB-90001", "kind": "unit_build", "at": "2026-08-31T07:20:00Z", "serial": "ADU-900001", "board_serial": "CB2-59211"},
+     {"event_id": "MES-UB-90003", "kind": "unit_build", "at": "2026-08-31T07:30:00Z", "serial": "ADU-900003", "board_serial": "CB2-00147"},
+     {"event_id": "MES-UB-90004", "kind": "unit_build", "at": "2026-08-31T07:31:00Z", "serial": "ADU-900004", "board_serial": "CB9-99999"},
+     {"event_id": "MES-RW-90005", "kind": "rework", "at": "2026-08-20T10:00:00Z", "serial": "ADU-040091", "board_serial": "CB3-59211"},
+     {"event_id": "MES-UB-90006", "kind": "unit_build", "at": "2026-09-05T09:00:00Z", "serial": "ADU-900006", "board_serial": "CB3-59211"},
+     {"event_id": "MES-SC-90007", "kind": "reel_scan", "at": "2026-08-31T06:30:00Z", "reel": "R-0149", "line": 2}
+    ]}},
+    {"key": "plant", "as": "viewer", "method": "GET", "path": "/v1/plant"}
+   ]
+  },
+  {
+   "title": "The supplier's notice",
+   "say": "Kestrel Components writes: capacitors in lot B-177 with date codes 5 to 9 July may have contaminated electrolyte. Before anything is recalled, the field returns are checked against the claim: per supplier lot, the return rate of the units the MES links to it, against every other unit; and within B-177, per date code.",
+   "calls": [
+    {"key": "inc", "as": "engineer", "method": "POST", "path": "/v1/quality/incidents", "body": {"supplier_lot": "B-177", "date_code_from": "2026-07-05", "date_code_to": "2026-07-09", "source": "Kestrel Components quality notice KQN-2026-031", "description": "Electrolyte contamination on five production days; capacitors may lose capacitance and fail open within months."}}
+   ]
+  },
+  {
+   "title": "The smallest defensible recall",
+   "say": "The scope job learns how the records go wrong (misread rates from deliveries of one lot, scan delays from the line with splice sensors), works out for every unit the probability that it holds a capacitor from the window's reels, prices getting each unit back by where it is, and chooses the cheapest set that leaves out no unit above 1% and fewer than half an affected unit in expectation. Alongside it, three answers the plant's own system gives without probabilities: the MES's serial genealogy, whole work orders, and every unit built while B-177 was on a line. The simulation truth judges all four.",
+   "calls": [
+    {"key": "scope", "as": "engineer", "method": "POST", "path": "/v1/recalls/scope", "body": {"incident_id": "{{inc.incident_id}}"}},
+    {"key": "impact", "as": "viewer", "method": "GET", "path": "/v1/recalls/{{scope.result.recall_id}}/impact"}
+   ]
+  },
+  {
+   "title": "Three units, traced",
+   "say": "Why the model and the MES disagree, one unit at a time: a unit whose board sits at a reel splice the operator scanned late, a unit whose rework ticket lost the replacement board's serial, and a unit the MES leaves out of the recall.",
+   "calls": [
+    {"key": "unit_splice", "as": "viewer", "method": "GET", "path": "/v1/units/{{impact.examples.splice}}/genealogy"},
+    {"key": "unit_rework", "as": "viewer", "method": "GET", "path": "/v1/units/{{impact.examples.rework}}/genealogy"},
+    {"key": "unit_missed", "as": "viewer", "method": "GET", "path": "/v1/units/{{impact.examples.mes_missed}}/genealogy"}
+   ]
+  },
+  {
+   "title": "Approval, notices and the audit trail",
+   "say": "The engineer who scoped the recall cannot approve it; the head of quality can. Only an approved recall produces customer notices: per customer, the shipments and serials, as JSON and CSV, with units still in the warehouse on a hold list. Every step is in a hash-chained audit log.",
+   "calls": [
+    {"key": "self", "expect_error": true, "as": "engineer", "method": "POST", "path": "/v1/recalls/{{scope.result.recall_id}}/approve", "body": {"note": "approving my own scope"}},
+    {"key": "approve", "as": "head", "method": "POST", "path": "/v1/recalls/{{scope.result.recall_id}}/approve", "body": {"note": "Reviewed: notice corroborated by returns; uncertain units included by policy"}},
+    {"key": "notices", "as": "engineer", "method": "POST", "path": "/v1/notices/export", "body": {"recall_id": "{{scope.result.recall_id}}"}},
+    {"key": "audit", "as": "head", "method": "GET", "path": "/v1/audit?limit=12"}
+   ]
+  }
+ ]
+}

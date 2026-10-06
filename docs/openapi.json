@@ -1,0 +1,991 @@
+{
+ "openapi": "3.1.0",
+ "info": {
+  "title": "product-recall-traceability",
+  "version": "1.0.0"
+ },
+ "paths": {
+  "/v1/jobs/{job_id}": {
+   "get": {
+    "tags": [
+     "platform"
+    ],
+    "summary": "Status, attempts and result of a long-running job",
+    "operationId": "job_status_v1_jobs__job_id__get",
+    "parameters": [
+     {
+      "name": "job_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Job Id"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/jobs": {
+   "get": {
+    "tags": [
+     "platform"
+    ],
+    "summary": "Jobs by status; status=dead is the dead-letter view",
+    "operationId": "job_list_v1_jobs_get",
+    "parameters": [
+     {
+      "name": "status",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "string",
+       "default": "dead",
+       "title": "Status"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/audit": {
+   "get": {
+    "tags": [
+     "platform"
+    ],
+    "summary": "Latest audit events and whether the hash chain verifies",
+    "operationId": "audit_log_v1_audit_get",
+    "parameters": [
+     {
+      "name": "limit",
+      "in": "query",
+      "required": false,
+      "schema": {
+       "type": "integer",
+       "default": 50,
+       "title": "Limit"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/events/assembly": {
+   "post": {
+    "tags": [
+     "connectors"
+    ],
+    "summary": "Assembly events from the MES. `generate` loads sixty days of the synthetic plant's history in a background job; `events` records new events, each checked on its own (duplicates, unknown parts, out-of-order, boards already fitted)",
+    "operationId": "assembly_events_v1_events_assembly_post",
+    "parameters": [
+     {
+      "name": "Idempotency-Key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Idempotency-Key"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/EventsIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "202": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/plant": {
+   "get": {
+    "tags": [
+     "connectors"
+    ],
+    "summary": "(+) What the plant's systems hold, and how good the records are",
+    "operationId": "get_plant_v1_plant_get",
+    "parameters": [
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/quality/incidents": {
+   "post": {
+    "tags": [
+     "quality"
+    ],
+    "summary": "Record a supplier's defect notice for a lot and a window of date codes; returns the field-return evidence per lot and per date code",
+    "operationId": "incident_v1_quality_incidents_post",
+    "parameters": [
+     {
+      "name": "Idempotency-Key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Idempotency-Key"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/IncidentIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/recalls/scope": {
+   "post": {
+    "tags": [
+     "recalls"
+    ],
+    "summary": "Compute the minimum defensible recall set for a notice in a background job: genealogy with probabilities, the cost of getting each unit back, the optimiser, and the plant's own deterministic answers alongside",
+    "operationId": "recall_scope_v1_recalls_scope_post",
+    "parameters": [
+     {
+      "name": "Idempotency-Key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Idempotency-Key"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScopeIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "202": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/recalls/{recall_id}/impact": {
+   "get": {
+    "tags": [
+     "recalls"
+    ],
+    "summary": "The recall set against every alternative: units, cost, customers and shipments, the uncertain units, the evidence and the model that produced it",
+    "operationId": "impact_v1_recalls__recall_id__impact_get",
+    "parameters": [
+     {
+      "name": "recall_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Recall Id"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/recalls/{recall_id}/approve": {
+   "post": {
+    "tags": [
+     "recalls"
+    ],
+    "summary": "(+) Approve the recall set; a second person must approve, never the one who scoped it",
+    "operationId": "approve_v1_recalls__recall_id__approve_post",
+    "parameters": [
+     {
+      "name": "recall_id",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "format": "uuid",
+       "title": "Recall Id"
+      }
+     },
+     {
+      "name": "Idempotency-Key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Idempotency-Key"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ApproveIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/notices/export": {
+   "post": {
+    "tags": [
+     "customer trace"
+    ],
+    "summary": "Customer notices for an approved recall: per customer the shipments and serials, as JSON and CSV; units still in our warehouse go on a hold list",
+    "operationId": "notices_v1_notices_export_post",
+    "parameters": [
+     {
+      "name": "Idempotency-Key",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Idempotency-Key"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "requestBody": {
+     "required": true,
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/NoticesIn"
+       }
+      }
+     }
+    },
+    "responses": {
+     "201": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  },
+  "/v1/units/{serial}/genealogy": {
+   "get": {
+    "tags": [
+     "genealogy"
+    ],
+    "summary": "One unit's genealogy: the board it holds (or the spares it might hold after a rework), the reels on each board with probabilities, the lots those reels came from, where the unit went, and every recall it is in",
+    "operationId": "genealogy_v1_units__serial__genealogy_get",
+    "parameters": [
+     {
+      "name": "serial",
+      "in": "path",
+      "required": true,
+      "schema": {
+       "type": "string",
+       "title": "Serial"
+      }
+     },
+     {
+      "name": "authorization",
+      "in": "header",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Authorization"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "description": "Successful Response",
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      }
+     },
+     "422": {
+      "description": "Validation Error",
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "components": {
+  "schemas": {
+   "ApproveIn": {
+    "properties": {
+     "note": {
+      "type": "string",
+      "maxLength": 500,
+      "minLength": 3,
+      "title": "Note"
+     }
+    },
+    "type": "object",
+    "required": [
+     "note"
+    ],
+    "title": "ApproveIn"
+   },
+   "Event": {
+    "properties": {
+     "event_id": {
+      "type": "string",
+      "maxLength": 60,
+      "minLength": 1,
+      "title": "Event Id",
+      "description": "the source system's id; a replay is ignored"
+     },
+     "kind": {
+      "type": "string",
+      "pattern": "^(unit_build|rework|reel_scan)$",
+      "title": "Kind"
+     },
+     "at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "At"
+     },
+     "serial": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 40
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Serial"
+     },
+     "board_serial": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 40
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Board Serial"
+     },
+     "reel": {
+      "anyOf": [
+       {
+        "type": "string",
+        "maxLength": 40
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reel"
+     },
+     "line": {
+      "anyOf": [
+       {
+        "type": "integer",
+        "maximum": 9.0,
+        "minimum": 1.0
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Line"
+     }
+    },
+    "type": "object",
+    "required": [
+     "event_id",
+     "kind",
+     "at"
+    ],
+    "title": "Event"
+   },
+   "EventsIn": {
+    "properties": {
+     "generate": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Generate"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "events": {
+      "anyOf": [
+       {
+        "items": {
+         "$ref": "#/components/schemas/Event"
+        },
+        "type": "array",
+        "maxItems": 2000
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Events"
+     }
+    },
+    "type": "object",
+    "title": "EventsIn"
+   },
+   "Generate": {
+    "properties": {
+     "seed": {
+      "type": "integer",
+      "maximum": 1000000.0,
+      "minimum": 0.0,
+      "title": "Seed",
+      "default": 11
+     }
+    },
+    "type": "object",
+    "title": "Generate"
+   },
+   "HTTPValidationError": {
+    "properties": {
+     "detail": {
+      "items": {
+       "$ref": "#/components/schemas/ValidationError"
+      },
+      "type": "array",
+      "title": "Detail"
+     }
+    },
+    "type": "object",
+    "title": "HTTPValidationError"
+   },
+   "IncidentIn": {
+    "properties": {
+     "supplier_lot": {
+      "type": "string",
+      "maxLength": 20,
+      "minLength": 1,
+      "title": "Supplier Lot"
+     },
+     "date_code_from": {
+      "type": "string",
+      "format": "date",
+      "title": "Date Code From"
+     },
+     "date_code_to": {
+      "type": "string",
+      "format": "date",
+      "title": "Date Code To"
+     },
+     "source": {
+      "type": "string",
+      "maxLength": 120,
+      "title": "Source",
+      "default": "supplier notice"
+     },
+     "description": {
+      "type": "string",
+      "maxLength": 1000,
+      "title": "Description",
+      "default": ""
+     }
+    },
+    "type": "object",
+    "required": [
+     "supplier_lot",
+     "date_code_from",
+     "date_code_to"
+    ],
+    "title": "IncidentIn"
+   },
+   "NoticesIn": {
+    "properties": {
+     "recall_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Recall Id"
+     }
+    },
+    "type": "object",
+    "required": [
+     "recall_id"
+    ],
+    "title": "NoticesIn"
+   },
+   "ScopeIn": {
+    "properties": {
+     "incident_id": {
+      "type": "string",
+      "format": "uuid",
+      "title": "Incident Id"
+     },
+     "max_expected_escapes": {
+      "type": "number",
+      "maximum": 50.0,
+      "minimum": 0.0,
+      "title": "Max Expected Escapes",
+      "description": "affected units the recall may expect to leave out",
+      "default": 0.5
+     },
+     "exclude_above": {
+      "type": "number",
+      "maximum": 0.5,
+      "minimum": 0.0,
+      "title": "Exclude Above",
+      "description": "no unit with a higher probability is left out",
+      "default": 0.01
+     }
+    },
+    "type": "object",
+    "required": [
+     "incident_id"
+    ],
+    "title": "ScopeIn"
+   },
+   "ValidationError": {
+    "properties": {
+     "loc": {
+      "items": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "integer"
+        }
+       ]
+      },
+      "type": "array",
+      "title": "Location"
+     },
+     "msg": {
+      "type": "string",
+      "title": "Message"
+     },
+     "type": {
+      "type": "string",
+      "title": "Error Type"
+     },
+     "input": {
+      "title": "Input"
+     },
+     "ctx": {
+      "type": "object",
+      "title": "Context"
+     }
+    },
+    "type": "object",
+    "required": [
+     "loc",
+     "msg",
+     "type"
+    ],
+    "title": "ValidationError"
+   }
+  }
+ }
+}
